@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -54,17 +55,23 @@ def install_backend(with_ocr: bool) -> None:
         run([sys.executable, "-m", "venv", str(VENV_DIR)])
     else:
         print("[backend] Reusing backend/.venv.")
-    run([str(VENV_PYTHON), "-m", "pip", "install", "--upgrade", "pip"])
-    run([str(VENV_PYTHON), "-m", "pip", "install", "-r", "requirements.txt"], BACKEND_DIR)
-    run([str(VENV_PYTHON), "-m", "pip", "install", "-r", "requirements-dev.txt"], BACKEND_DIR)
+    pip_index = os.environ.get("DOCUMENT_REVIEW_PIP_INDEX_URL", "https://pypi.org/simple")
+    index_args = ["--index-url", pip_index]
+    run([str(VENV_PYTHON), "-m", "pip", "install", *index_args, "--upgrade", "pip"])
+    run([str(VENV_PYTHON), "-m", "pip", "install", *index_args, "-r", "requirements.txt"], BACKEND_DIR)
+    run([str(VENV_PYTHON), "-m", "pip", "install", *index_args, "-r", "requirements-dev.txt"], BACKEND_DIR)
     if with_ocr:
         print("[backend] Installing optional PaddleOCR runtime; this may take several minutes...")
-        run([str(VENV_PYTHON), "-m", "pip", "install", "-r", "requirements-ocr.txt"], BACKEND_DIR)
+        run([str(VENV_PYTHON), "-m", "pip", "install", *index_args, "-r", "requirements-ocr.txt"], BACKEND_DIR)
 
 
 def install_frontend(npm: str) -> None:
-    print("[frontend] Installing locked npm dependencies...")
-    run([npm, "ci"], FRONTEND_DIR)
+    print("[frontend] Installing npm dependencies for the current platform...")
+    registry = os.environ.get("DOCUMENT_REVIEW_NPM_REGISTRY", "https://registry.npmjs.org")
+    run(
+        [npm, "install", "--registry", registry, "--replace-registry-host=always"],
+        FRONTEND_DIR,
+    )
 
 
 def verify(npm: str) -> None:
