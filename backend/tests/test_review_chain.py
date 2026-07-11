@@ -11,14 +11,14 @@ CONTRACT = """采购服务合同
 """
 
 
-def test_three_stage_chain_runs_configured_independent_dimensions(caplog):
+def test_three_stage_chain_runs_five_independent_dimensions(caplog):
     engine = ReviewEngine(Settings(llm_provider="mock"))
     chain = ReviewChain(engine, max_concurrency=2)
 
     with caplog.at_level(logging.INFO):
         result = chain.invoke(CONTRACT)
 
-    assert len(engine.dimensions) == 6
+    assert len(engine.dimensions) == 5
     assert [item.category for item in result.items] == ["权益不对等", "条款缺失", "表述模糊"]
     assert [item.severity for item in result.items] == ["high", "medium", "medium"]
     assert "三阶段审核" in result.summary

@@ -5,7 +5,7 @@ from app.prompts.loader import load_prompt
 from app.utils.json_parser import extract_json
 
 
-def test_review_prompt_loads_experiment_dimension_and_renders_json_shape():
+def test_review_prompt_loads_five_dimensions_and_renders_json_shape():
     bundle = load_prompt("review")
     rendered = bundle.prompt.invoke(
         {
@@ -23,7 +23,6 @@ def test_review_prompt_loads_experiment_dimension_and_renders_json_shape():
         "ambiguity",
         "imbalance",
         "data_compliance",
-        "intellectual_property",
     ]
     assert '"items": [' in rendered
     assert "数据合规" in rendered

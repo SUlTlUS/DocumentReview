@@ -40,6 +40,3 @@ dimensions:
   - name: 数据合规
     key: data_compliance
     description: 审查个人信息处理目的、范围、第三方共享、主体权利及跨境传输安排。
-  - name: 知识产权合规
-    key: intellectual_property
-    description: 审查成果、源代码、商标和背景知识产权的归属、许可范围及侵权责任。
