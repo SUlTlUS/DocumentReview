@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import ReviewResult from './ReviewResult.vue'
-import { getDocument, getHealth, triggerReview } from '../api'
+import { getDocument, getHealth, getReviewResult, triggerReview } from '../api'
 
 vi.mock('vue-router', () => ({
   useRoute: () => ({ params: { id: '1' } }),
@@ -31,5 +31,24 @@ describe('ReviewResult provider copy', () => {
 
     expect(wrapper.text()).toContain('DeepSeek 正在检查合规风险、条款缺失、模糊表述、权益不对等和数据合规。')
     expect(wrapper.text()).not.toContain('Mock 管线正在检查')
+  })
+
+  it('omits pipeline metadata from completed review metrics', async () => {
+    vi.mocked(getHealth).mockResolvedValue({ status: 'ok', llm_provider: 'deepseek', deepseek_api_configured: true, version: '2.0.0' })
+    vi.mocked(getDocument).mockResolvedValue({
+      id: 1, filename: 'contract.txt', file_type: 'txt', file_size: 10, status: 'ready',
+      review_status: 'completed', upload_time: '', content_summary: '', chunk_count: 1,
+      parse_method: 'digital', last_error: null,
+    })
+    vi.mocked(getReviewResult).mockResolvedValue({
+      id: 1, document_id: 1, review_time: '', status: 'completed', total_items: 3,
+      risk_count: 1, summary: '审核完成', duration_ms: 1200, pipeline_version: 'v2.0',
+      prompt_version: '2.0', error_message: null, items: [],
+    })
+    const wrapper = mount(ReviewResult, { global: { stubs: { KineticTitle: true } } })
+    await flushPromises()
+
+    expect(wrapper.get('[aria-label="审核统计"]').text()).not.toContain('管线')
+    expect(wrapper.text()).not.toContain('v2.0')
   })
 })

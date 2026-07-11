@@ -47,7 +47,7 @@ onMounted(load)
     <div v-else-if="reviewing" class="review-progress panel" aria-live="polite"><div class="progress-copy"><span>ANALYZE</span><span>CLASSIFY</span><span>REPORT</span></div><h2>正在审核合同</h2><p>{{ reviewProgressCopy }}</p></div>
     <div v-else-if="!review" class="empty-review panel"><span>NO REVIEW YET</span><h2>这份文档还没有审核记录</h2><p>发起审核后，风险卡片、原文和修改建议会出现在这里。</p><button class="button button-primary" type="button" @click="runReview">开始第一次审核</button></div>
     <template v-else>
-      <div class="metric-grid" aria-label="审核统计"><article class="metric panel"><span>问题总数</span><strong>{{ review.total_items }}</strong></article><article class="metric panel danger"><span>高风险</span><strong>{{ review.risk_count }}</strong></article><article class="metric panel"><span>耗时</span><strong>{{ review.duration_ms }}<small>ms</small></strong></article><article class="metric panel"><span>管线</span><strong class="pipeline">{{ review.pipeline_version }}</strong></article></div>
+      <div class="metric-grid" aria-label="审核统计"><article class="metric panel"><span>问题总数</span><strong>{{ review.total_items }}</strong></article><article class="metric panel danger"><span>高风险</span><strong>{{ review.risk_count }}</strong></article><article class="metric panel"><span>耗时</span><strong>{{ review.duration_ms }}<small>ms</small></strong></article></div>
       <article class="summary-card panel"><span>EXECUTIVE SUMMARY</span><p>{{ review.summary }}</p></article>
       <div class="risk-list">
         <article v-for="item in sortedItems" :key="item.id" class="risk-card panel" :class="`risk-${item.severity}`">
@@ -66,4 +66,7 @@ onMounted(load)
 @media (max-width: 840px) { .review-heading { align-items: flex-start; flex-direction: column; }.metric-grid { grid-template-columns: repeat(2, 1fr); } }.heading-actions .button { flex: 1; }
 @media (max-width: 480px) { .metric-grid { grid-template-columns: 1fr; }.risk-head { flex-direction: column; }.risk-card { padding: 19px; } }
 @media (prefers-reduced-motion: reduce) { .progress-copy span, .metric strong { animation: none; } }
+.heading-actions { max-width: 100%; }
+.heading-actions .button { flex: 0 0 auto; }
+.metric-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 </style>
