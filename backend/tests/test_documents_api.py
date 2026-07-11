@@ -1,6 +1,8 @@
 from pathlib import Path
+from io import BytesIO
 
 import pytest
+from PyPDF2 import PdfWriter
 
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -63,3 +65,20 @@ def test_upload_accepts_all_supported_contract_formats(api_client, extension):
     assert payload["document"]["file_type"] == extension
     assert payload["document"]["status"] == "ready"
     assert payload["chunk_count"] >= 1
+
+
+def test_upload_scanned_pdf_uses_mock_ocr_fallback(api_client):
+    stream = BytesIO()
+    writer = PdfWriter()
+    writer.add_blank_page(width=595, height=842)
+    writer.write(stream)
+
+    response = api_client.post(
+        "/api/documents/upload",
+        files={"file": ("scan.pdf", stream.getvalue(), "application/pdf")},
+    )
+
+    assert response.status_code == 201
+    document = response.json()["document"]
+    assert document["status"] == "ready"
+    assert document["parse_method"] == "ocr-mock"

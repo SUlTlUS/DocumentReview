@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     database_url: str = f"sqlite:///{(BACKEND_DIR / 'data' / 'doc_review.db').as_posix()}"
     upload_dir: Path = BACKEND_DIR / "data" / "uploads"
     llm_provider: str = "mock"
+    ocr_provider: str = "fake"
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com/v1"
     deepseek_model: str = "deepseek-v4-flash"

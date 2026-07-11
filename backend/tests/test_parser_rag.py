@@ -1,8 +1,11 @@
 from pathlib import Path
 
 from docx import Document as DocxDocument
+from PyPDF2 import PdfWriter
 
+from app.engines.ocr import FakeOCREngine
 from app.services.parser import parse_file
+from app.services.parser import parse_document
 from app.services.rag import RAGRegistry, RAGService, split_text
 
 
@@ -35,6 +38,19 @@ def test_real_contract_fixtures_extract_pdf_docx_and_txt():
         assert "采购服务合同" in extracted
         assert "合理期限" in extracted
         assert "违约责任仅约束乙方" in extracted
+
+
+def test_scanned_pdf_falls_back_to_injected_ocr(tmp_path):
+    path = tmp_path / "scan.pdf"
+    writer = PdfWriter()
+    writer.add_blank_page(width=595, height=842)
+    with path.open("wb") as stream:
+        writer.write(stream)
+
+    parsed = parse_document(path, "pdf", FakeOCREngine("扫描合同 OCR 结果"))
+
+    assert parsed.text == "扫描合同 OCR 结果"
+    assert parsed.method == "ocr-mock"
 
 
 def test_split_text_has_overlap_and_respects_size():

@@ -1,12 +1,22 @@
+from dataclasses import dataclass
+import logging
 from pathlib import Path
 
 from docx import Document as DocxDocument
 from PyPDF2 import PdfReader
 
 from app.errors import ParseError
+from app.engines.ocr import OCRProvider
 
 
 SUPPORTED_TYPES = {"pdf", "docx", "txt"}
+logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class ParsedDocument:
+    text: str
+    method: str
 
 
 def _read_txt(path: Path) -> str:
@@ -28,7 +38,11 @@ def _read_pdf(path: Path) -> str:
     return "\n\n".join((page.extract_text() or "").strip() for page in reader.pages)
 
 
-def parse_file(file_path: str | Path, file_type: str) -> str:
+def parse_document(
+    file_path: str | Path,
+    file_type: str,
+    ocr_provider: OCRProvider | None = None,
+) -> ParsedDocument:
     path = Path(file_path)
     normalized_type = file_type.lower().lstrip(".")
     if normalized_type not in SUPPORTED_TYPES:
@@ -41,8 +55,16 @@ def parse_file(file_path: str | Path, file_type: str) -> str:
             text = _read_txt(path)
         elif normalized_type == "docx":
             text = _read_docx(path)
-        else:
+        elif normalized_type == "pdf":
             text = _read_pdf(path)
+            if not text.strip() and ocr_provider is not None:
+                logger.info("scan_pdf_detected ocr_provider=%s", ocr_provider.name)
+                text = ocr_provider.process_pdf(path)
+                method = ocr_provider.name
+            else:
+                method = "digital"
+        else:
+            raise ParseError(f"不支持的文件类型：{file_type}")
     except ParseError:
         raise
     except Exception as exc:
@@ -51,5 +73,12 @@ def parse_file(file_path: str | Path, file_type: str) -> str:
     normalized = "\n".join(line.rstrip() for line in text.splitlines()).strip()
     if not normalized:
         raise ParseError("文档中未提取到可审核文字")
-    return normalized
+    return ParsedDocument(text=normalized, method=locals().get("method", "digital"))
 
+
+def parse_file(
+    file_path: str | Path,
+    file_type: str,
+    ocr_provider: OCRProvider | None = None,
+) -> str:
+    return parse_document(file_path, file_type, ocr_provider).text

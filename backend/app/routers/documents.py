@@ -8,9 +8,10 @@ from sqlalchemy.orm import Session
 from app.config import Settings, get_settings
 from app.database import get_db
 from app.errors import ParseError
+from app.engines.ocr import create_ocr_provider
 from app.models import Document
 from app.schemas import DocumentListResponse, DocumentResponse, DocumentUploadResponse
-from app.services.parser import SUPPORTED_TYPES, parse_file
+from app.services.parser import SUPPORTED_TYPES, parse_document
 from app.services.rag import rag_registry
 
 
@@ -66,12 +67,16 @@ async def upload_document(
         document.status = "parsing"
         db.commit()
         storage_path.write_bytes(content)
-        text = parse_file(storage_path, suffix)
-        rag = rag_registry.build(document.id, text)
-        document.extracted_text = text
-        document.content_summary = text[:200]
+        parsed = parse_document(
+            storage_path,
+            suffix,
+            create_ocr_provider(settings.ocr_provider) if suffix == "pdf" else None,
+        )
+        rag = rag_registry.build(document.id, parsed.text)
+        document.extracted_text = parsed.text
+        document.content_summary = parsed.text[:200]
         document.chunk_count = len(rag.get_chunks())
-        document.parse_method = "digital"
+        document.parse_method = parsed.method
         document.status = "ready"
         document.last_error = None
         db.commit()
@@ -118,4 +123,3 @@ def delete_document(document_id: int, db: Session = Depends(get_db)) -> Response
     if storage_path.is_file():
         storage_path.unlink()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
