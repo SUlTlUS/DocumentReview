@@ -36,9 +36,85 @@ class DimensionResultPayload(BaseModel):
     items: list[ReviewItemPayload] = Field(default_factory=list)
 
 
-def validate_dimension_result(payload: dict[str, Any], category: str) -> DimensionResultPayload:
+_ITEM_LIST_KEYS = ("items", "risks", "issues", "findings", "results")
+_ITEM_FIELD_ALIASES = {
+    "category": ("category", "dimension", "type", "risk_type"),
+    "severity": ("severity", "risk_level", "level", "riskLevel"),
+    "title": ("title", "risk_title", "name", "issue"),
+    "description": ("description", "analysis", "detail", "reason", "risk_description"),
+    "source_text": ("source_text", "quote", "evidence", "source", "original_text"),
+    "suggestion": ("suggestion", "recommendation", "advice", "remediation", "revision"),
+}
+
+
+def _first_text(payload: dict[str, Any], aliases: tuple[str, ...]) -> str:
+    for key in aliases:
+        value = payload.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ""
+
+
+def _normalize_severity(value: str) -> Literal["high", "medium", "low"]:
+    normalized = value.strip().lower().replace("_", "").replace("-", "")
+    if normalized in {"high", "critical", "severe", "高", "高风险", "严重"}:
+        return "high"
+    if normalized in {"low", "minor", "低", "低风险", "轻微"}:
+        return "low"
+    return "medium"
+
+
+def _normalize_review_item(raw_item: Any, default_category: str) -> dict[str, str]:
+    item = raw_item if isinstance(raw_item, dict) else {"description": str(raw_item)}
+    values = {
+        field: _first_text(item, aliases)
+        for field, aliases in _ITEM_FIELD_ALIASES.items()
+    }
+    title = values["title"] or values["description"][:40] or "未命名风险"
+    description = values["description"] or f"{title}（模型未提供详细分析，需人工复核）"
+    return {
+        "category": values["category"] or default_category or "合规风险",
+        "severity": _normalize_severity(values["severity"]),
+        "title": title,
+        "description": description,
+        "source_text": values["source_text"] or "模型未提供原文引用（需人工复核）",
+        "suggestion": values["suggestion"] or "建议由法务人员结合原文复核并补充修改方案。",
+    }
+
+
+def _normalize_review_payload(payload: Any, default_category: str = "") -> dict[str, Any]:
+    if isinstance(payload, list):
+        raw_items = payload
+        summary = ""
+    elif isinstance(payload, dict):
+        raw_items = next(
+            (payload[key] for key in _ITEM_LIST_KEYS if isinstance(payload.get(key), list)),
+            None,
+        )
+        if raw_items is None:
+            has_item_field = any(
+                alias in payload
+                for aliases in _ITEM_FIELD_ALIASES.values()
+                for alias in aliases
+            )
+            raw_items = [payload] if has_item_field else []
+        summary = _first_text(payload, ("summary", "overview", "conclusion"))
+    else:
+        raw_items = []
+        summary = ""
+
+    items = [_normalize_review_item(item, default_category) for item in raw_items]
+    return {
+        "summary": summary or f"审核完成，共识别 {len(items)} 项风险。",
+        "items": items,
+    }
+
+
+def validate_dimension_result(payload: Any, category: str) -> DimensionResultPayload:
     try:
-        result = DimensionResultPayload.model_validate(payload)
+        result = DimensionResultPayload.model_validate(
+            _normalize_review_payload(payload, default_category=category)
+        )
     except ValidationError as exc:
         raise LLMError("维度审核结果字段不完整", str(exc)) from exc
     return DimensionResultPayload(
@@ -64,16 +140,19 @@ def _canonical_category(item: ReviewItemPayload, categories: list[str]) -> str:
 
 
 def validate_review_result(
-    payload: dict[str, Any],
+    payload: Any,
     categories: set[str] | list[str] | tuple[str, ...] | None = None,
 ) -> ReviewResultPayload:
+    allowed = list(categories) if categories else []
+    default_category = "合规风险" if "合规风险" in allowed else (allowed[0] if allowed else "")
     try:
-        result = ReviewResultPayload.model_validate(payload)
+        result = ReviewResultPayload.model_validate(
+            _normalize_review_payload(payload, default_category=default_category)
+        )
     except ValidationError as exc:
         raise LLMError("审核结果字段不完整", str(exc)) from exc
     if not categories:
         return result
-    allowed = list(categories)
     normalized: list[ReviewItemPayload] = []
     for item in result.items:
         category = _canonical_category(item, allowed)

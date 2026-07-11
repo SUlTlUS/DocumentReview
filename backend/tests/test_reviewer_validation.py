@@ -23,6 +23,40 @@ def test_dimension_validation_uses_trusted_dimension_name():
     assert result.items[0].category == "权益不对等"
 
 
+def test_dimension_validation_normalizes_alias_fields_and_chinese_severity():
+    result = validate_dimension_result(
+        {
+            "risks": [
+                {
+                    "risk_level": "高风险",
+                    "risk_title": "单方解除权",
+                    "analysis": "甲方可以无条件解除合同。",
+                    "quote": "甲方有权随时解除本合同",
+                    "recommendation": "增加对等解除权和通知期限。",
+                }
+            ]
+        },
+        "权益不对等",
+    )
+    assert result.items[0].category == "权益不对等"
+    assert result.items[0].severity == "high"
+    assert result.items[0].title == "单方解除权"
+    assert result.items[0].description == "甲方可以无条件解除合同。"
+    assert result.items[0].source_text == "甲方有权随时解除本合同"
+    assert result.items[0].suggestion == "增加对等解除权和通知期限。"
+
+
+def test_dimension_validation_marks_missing_evidence_for_manual_review():
+    result = validate_dimension_result(
+        {"issues": [{"title": "付款期限不明确", "level": "moderate"}]},
+        "表述模糊",
+    )
+    assert result.items[0].severity == "medium"
+    assert "需人工复核" in result.items[0].description
+    assert "需人工复核" in result.items[0].source_text
+    assert result.items[0].suggestion
+
+
 def test_report_validation_normalizes_model_category_aliases():
     result = validate_review_result(
         {
@@ -44,3 +78,13 @@ def test_report_validation_keeps_unknown_finding_with_safe_fallback():
         ALLOWED,
     )
     assert result.items[0].category == "合规风险"
+
+
+def test_report_validation_accepts_missing_summary_and_alias_container():
+    result = validate_review_result(
+        {"findings": [{"name": "未约定保密义务", "risk_level": "low"}]},
+        ALLOWED,
+    )
+    assert result.summary == "审核完成，共识别 1 项风险。"
+    assert result.items[0].category == "合规风险"
+    assert result.items[0].severity == "low"

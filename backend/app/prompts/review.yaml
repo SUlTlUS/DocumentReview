@@ -12,6 +12,7 @@ human: |
   {document_text}
 
   返回合法 JSON，不要添加 Markdown 代码块：
+  items 中每个对象必须完整包含下列六个字段，不得改名或省略；没有找到风险时返回 {{"items": []}}。
   {{
     "items": [
       {{

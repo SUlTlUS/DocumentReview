@@ -5,4 +5,5 @@ system: |
 human: |
   合同结构：{document_structure}
   各维度结果：{dimension_results}
+  items 中每个对象必须完整包含 category、severity、title、description、source_text、suggestion 六个字段，不得改名或省略。
   返回合法 JSON：{{"summary":"整体风险总结","items":[{{"category":"上述允许分类之一","severity":"high|medium|low","title":"...","description":"...","source_text":"...","suggestion":"..."}}]}}
