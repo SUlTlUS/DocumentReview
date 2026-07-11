@@ -3,6 +3,10 @@ import logging
 from pathlib import Path
 
 from docx import Document as DocxDocument
+from docx.oxml.table import CT_Tbl
+from docx.oxml.text.paragraph import CT_P
+from docx.table import Table
+from docx.text.paragraph import Paragraph
 from PyPDF2 import PdfReader
 
 from app.errors import ParseError
@@ -30,7 +34,19 @@ def _read_txt(path: Path) -> str:
 
 def _read_docx(path: Path) -> str:
     document = DocxDocument(path)
-    return "\n".join(paragraph.text for paragraph in document.paragraphs)
+    lines: list[str] = []
+    for child in document.element.body.iterchildren():
+        if isinstance(child, CT_P):
+            text = Paragraph(child, document).text.strip()
+            if text:
+                lines.append(text)
+        elif isinstance(child, CT_Tbl):
+            table = Table(child, document)
+            for row in table.rows:
+                cells = [cell.text.strip() for cell in row.cells]
+                if any(cells):
+                    lines.append(" | ".join(cells))
+    return "\n".join(lines)
 
 
 def _read_pdf(path: Path) -> str:

@@ -27,9 +27,12 @@ def test_parse_docx_extracts_paragraphs(tmp_path):
     document = DocxDocument()
     document.add_paragraph("采购合同")
     document.add_paragraph("甲方应在三十日内验收。")
+    table = document.add_table(rows=1, cols=2)
+    table.cell(0, 0).text = "付款期限"
+    table.cell(0, 1).text = "十五个工作日"
     document.save(path)
 
-    assert parse_file(path, "docx") == "采购合同\n甲方应在三十日内验收。"
+    assert parse_file(path, "docx") == "采购合同\n甲方应在三十日内验收。\n付款期限 | 十五个工作日"
 
 
 def test_real_contract_fixtures_extract_pdf_docx_and_txt():
