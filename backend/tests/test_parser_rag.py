@@ -1,7 +1,12 @@
+from pathlib import Path
+
 from docx import Document as DocxDocument
 
 from app.services.parser import parse_file
 from app.services.rag import RAGRegistry, RAGService, split_text
+
+
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_parse_txt_supports_utf8_and_gb18030(tmp_path):
@@ -22,6 +27,14 @@ def test_parse_docx_extracts_paragraphs(tmp_path):
     document.save(path)
 
     assert parse_file(path, "docx") == "采购合同\n甲方应在三十日内验收。"
+
+
+def test_real_contract_fixtures_extract_pdf_docx_and_txt():
+    for extension in ("txt", "docx", "pdf"):
+        extracted = parse_file(FIXTURES / f"test_contract.{extension}", extension)
+        assert "采购服务合同" in extracted
+        assert "合理期限" in extracted
+        assert "违约责任仅约束乙方" in extracted
 
 
 def test_split_text_has_overlap_and_respects_size():
@@ -55,4 +68,3 @@ def test_registry_isolates_documents_and_rebuilds_after_restart():
     registry.clear()
     rebuilt = registry.get_or_build(1, "保密义务持续三年。")
     assert "保密" in rebuilt.retrieve_context("保密")[0].content
-

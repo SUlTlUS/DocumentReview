@@ -1,3 +1,11 @@
+from pathlib import Path
+
+import pytest
+
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
 def test_health_reports_mock_provider(api_client):
     response = api_client.get("/api/health")
     assert response.status_code == 200
@@ -41,3 +49,17 @@ def test_upload_rejects_unsupported_and_empty_files(api_client):
     )
     assert empty.status_code == 422
 
+
+@pytest.mark.parametrize("extension", ["txt", "docx", "pdf"])
+def test_upload_accepts_all_supported_contract_formats(api_client, extension):
+    fixture = FIXTURES / f"test_contract.{extension}"
+    response = api_client.post(
+        "/api/documents/upload",
+        files={"file": (fixture.name, fixture.read_bytes())},
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["document"]["file_type"] == extension
+    assert payload["document"]["status"] == "ready"
+    assert payload["chunk_count"] >= 1
