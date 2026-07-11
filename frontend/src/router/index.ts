@@ -11,5 +11,5 @@ const router = createRouter({
   ],
   scrollBehavior: () => ({ top: 0 }),
 })
-router.afterEach(() => requestAnimationFrame(() => document.querySelector<HTMLElement>('#main-content')?.focus()))
+router.afterEach(() => requestAnimationFrame(() => document.querySelector<HTMLElement>('#main-content')?.focus({ preventScroll: true })))
 export default router

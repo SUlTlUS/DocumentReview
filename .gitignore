@@ -18,6 +18,7 @@ dist/
 coverage/
 playwright-report/
 test-results/
+.playwright-cli/
 
 # Runtime data
 *.db
@@ -38,4 +39,3 @@ output/
 .vscode/
 .DS_Store
 Thumbs.db
-

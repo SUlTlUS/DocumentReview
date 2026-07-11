@@ -42,6 +42,7 @@ def test_chat_reuses_session_and_returns_quoted_context(api_client):
         payload = response.json()
         session_id = payload["session_id"]
         assert "根据文档原文" in payload["answer"]
+        assert "违约责任" in payload["answer"]
 
     history = api_client.get(
         f"/api/documents/{document_id}/chat/history",
@@ -64,4 +65,3 @@ def test_review_rejects_parse_failed_document(api_client):
 
     review = api_client.post(f"/api/documents/{document['id']}/review")
     assert review.status_code == 409
-

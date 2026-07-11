@@ -20,7 +20,9 @@ async function load() {
   loading.value = true; error.value = ''
   try {
     document.value = await getDocument(documentId)
-    try { review.value = await getReviewResult(documentId) } catch (reason) { if (!isNotFound(reason)) throw reason }
+    if (document.value.review_status !== 'pending') {
+      try { review.value = await getReviewResult(documentId) } catch (reason) { if (!isNotFound(reason)) throw reason }
+    }
   } catch (reason) { error.value = getErrorMessage(reason) } finally { loading.value = false }
 }
 async function runReview() {

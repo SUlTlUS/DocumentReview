@@ -115,7 +115,13 @@ class MockReviewerProvider:
     ) -> str:
         if not contexts:
             return "文档中未涉及此内容。"
-        quote = contexts[0].content[:160]
+        content = contexts[0].content
+        keywords = [keyword for keyword in ("违约", "保密", "验收", "付款", "交付", "争议") if keyword in question]
+        position = content.find(keywords[0]) if keywords else 0
+        if position < 0:
+            position = 0
+        start = max(0, position - 36)
+        quote = content[start : start + 180]
         return f"根据文档原文：“{quote}”\n\n针对“{question}”，建议结合上述条款进行判断。"
 
 
@@ -169,4 +175,3 @@ def get_reviewer_provider(
     if settings.llm_provider.lower() == "deepseek":
         return DeepSeekReviewerProvider(settings)
     raise LLMError("未知 LLM Provider", settings.llm_provider)
-
