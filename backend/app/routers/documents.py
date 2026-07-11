@@ -6,12 +6,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
+from app.chains.document_parsing import DocumentParsingChain
 from app.database import get_db
 from app.errors import ParseError
 from app.engines.ocr import create_ocr_provider
 from app.models import Document
 from app.schemas import DocumentListResponse, DocumentResponse, DocumentUploadResponse
-from app.services.parser import SUPPORTED_TYPES, parse_document
+from app.services.parser import SUPPORTED_TYPES
 from app.services.rag import rag_registry
 
 
@@ -67,16 +68,16 @@ async def upload_document(
         document.status = "parsing"
         db.commit()
         storage_path.write_bytes(content)
-        parsed = parse_document(
+        processed = DocumentParsingChain().invoke(
             storage_path,
             suffix,
             create_ocr_provider(settings.ocr_provider) if suffix == "pdf" else None,
         )
-        rag = rag_registry.build(document.id, parsed.text)
-        document.extracted_text = parsed.text
-        document.content_summary = parsed.text[:200]
-        document.chunk_count = len(rag.get_chunks())
-        document.parse_method = parsed.method
+        rag_registry.register(document.id, processed.rag)
+        document.extracted_text = processed.parsed.text
+        document.content_summary = processed.parsed.text[:200]
+        document.chunk_count = len(processed.rag.get_chunks())
+        document.parse_method = processed.parsed.method
         document.status = "ready"
         document.last_error = None
         db.commit()

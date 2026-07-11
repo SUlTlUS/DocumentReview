@@ -88,6 +88,10 @@ class RAGRegistry:
             self._services[document_id] = service
         return service
 
+    def register(self, document_id: int, service: RAGService) -> None:
+        with self._lock:
+            self._services[document_id] = service
+
     def get_or_build(self, document_id: int, text: str) -> RAGService:
         with self._lock:
             service = self._services.get(document_id)
@@ -103,4 +107,3 @@ class RAGRegistry:
 
 
 rag_registry = RAGRegistry()
-
