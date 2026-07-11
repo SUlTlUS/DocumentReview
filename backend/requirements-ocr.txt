@@ -1,0 +1,5 @@
+-r requirements.txt
+
+# Optional production OCR runtime. The default development/test provider is fake.
+paddlepaddle==3.3.0
+paddleocr==3.7.0
