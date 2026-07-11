@@ -7,6 +7,7 @@ from typing import Any
 from langchain_core.runnables import RunnableParallel
 
 from app.engines.reviewer import ReviewEngine, ReviewResultPayload
+from app.services.reporter import ReporterService
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ class ReviewChain:
     def __init__(self, engine: ReviewEngine, max_concurrency: int = 2) -> None:
         self.engine = engine
         self.max_concurrency = max_concurrency
+        self.reporter = ReporterService()
 
     def invoke(self, document_text: str) -> ReviewResultPayload:
         started = perf_counter()
@@ -56,7 +58,7 @@ class ReviewChain:
             else _serialize_results(dimension_results),
         }
         report_started = perf_counter()
-        result = self.engine.report_runnable().invoke(report_input)
+        result = self.reporter.normalize(self.engine.report_runnable().invoke(report_input))
         report_ms = round((perf_counter() - report_started) * 1_000)
         logger.info(
             "review_stage_complete stage=report findings=%d duration_ms=%d total_ms=%d",
