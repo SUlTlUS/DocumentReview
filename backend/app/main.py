@@ -15,7 +15,12 @@ from app.routers.chat import router as chat_router
 from app.schemas import ErrorResponse, HealthResponse
 
 
-logging.getLogger("app").setLevel(logging.INFO)
+application_logger = logging.getLogger("app")
+application_logger.setLevel(logging.INFO)
+uvicorn_logger = logging.getLogger("uvicorn.error")
+if uvicorn_logger.handlers:
+    application_logger.handlers = uvicorn_logger.handlers
+    application_logger.propagate = False
 
 
 @asynccontextmanager
