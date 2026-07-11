@@ -15,7 +15,8 @@ def test_review_and_repeat_review_preserve_contract(api_client):
     assert first.status_code == 200
     payload = first.json()
     assert payload["status"] == "completed"
-    assert payload["pipeline_version"] == "v1.0"
+    assert payload["pipeline_version"] == "v2.0"
+    assert payload["prompt_version"] == "2.0"
     assert payload["risk_count"] == 1
     assert {item["category"] for item in payload["items"]} == {
         "权益不对等",

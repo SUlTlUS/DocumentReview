@@ -32,7 +32,12 @@ def trigger_review(
     if document.status != "ready":
         raise HTTPException(status_code=409, detail="只有解析完成的文档可以审核")
 
-    review = Review(document_id=document_id, status="reviewing", pipeline_version="v1.0")
+    review = Review(
+        document_id=document_id,
+        status="reviewing",
+        pipeline_version=provider.pipeline_version,
+        prompt_version=provider.prompt_version,
+    )
     document.review_status = "reviewing"
     db.add(review)
     db.commit()
@@ -82,4 +87,3 @@ def get_latest_review(document_id: int, db: Session = Depends(get_db)) -> Review
     if review is None:
         raise HTTPException(status_code=404, detail="该文档尚未审核")
     return review
-
