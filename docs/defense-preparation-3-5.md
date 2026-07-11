@@ -4,6 +4,8 @@
 
 ## 3. 架构图与两条核心数据流
 
+高清图片：[architecture-defense.png](assets/architecture-defense.png)
+
 ### v1.0 分层架构
 
 ```mermaid
