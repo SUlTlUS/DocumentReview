@@ -1,0 +1,41 @@
+# Secrets
+.env
+*.env
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# Runtime data
+*.db
+*.db-shm
+*.db-wal
+backend/data/uploads/
+backend/data/tmp/
+backend/.cache/
+.model-cache/
+
+# Local benchmark and QA intermediates
+.benchmarks/
+tmp/
+output/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
