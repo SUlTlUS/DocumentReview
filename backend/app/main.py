@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,9 @@ from app.routers.documents import router as documents_router
 from app.routers.review import router as review_router
 from app.routers.chat import router as chat_router
 from app.schemas import ErrorResponse, HealthResponse
+
+
+logging.getLogger("app").setLevel(logging.INFO)
 
 
 @asynccontextmanager
