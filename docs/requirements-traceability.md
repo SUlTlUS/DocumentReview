@@ -11,7 +11,7 @@
 | PRD 3.2 | 深色主题和 240px 侧栏 | `frontend/src` app shell + pages | unit test + Edge screenshot | PASS |
 | Day2 | 五张表与 9 个端点 | models + routers | schema + OpenAPI inspection | PASS |
 | Day2 | 四页路由和完整主流程 | Vue Router + four views | Edge desktop/mobile E2E | PASS |
-| Day3 | 扫描 PDF OCR 降级 | 待实现 | Fake OCR contract | TODO |
-| Day3 | YAML Prompt 可扩展维度 | 待实现 | dimension experiment | TODO |
-| Day3 | 三阶段 LCEL 管线和日志 | 待实现 | pipeline tests | TODO |
-| Day3 | API 与 Day2 兼容 | 待实现 | OpenAPI diff | TODO |
+| Day3 | 扫描 PDF OCR 降级 | `engines/ocr.py` + `DocumentParsingChain` | blank PDF + Fake OCR | PASS (Mock) |
+| Day3 | YAML Prompt 可扩展维度 | `prompts/review.yaml` + loader | six-dimension experiment commits | PASS |
+| Day3 | 三阶段 LCEL 管线和日志 | `ReviewChain` + `ReviewEngine` + Reporter | pipeline/log/dedupe tests | PASS (Mock) |
+| Day3 | API 与 Day2 兼容 | unchanged routers/schemas | exact 9-endpoint OpenAPI test | PASS |

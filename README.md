@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-项目初始化阶段。默认验收使用 Mock LLM/OCR，真实密钥不进入仓库。
+Day2 v1.0 与 Day3 v2.0 均已完成。默认运行使用 Mock LLM/OCR；外部能力测试明确标记为 `PASS (Mock)`，真实密钥不进入仓库。
 
 ## 目录约定
 
@@ -13,7 +13,7 @@
 - `docs/`：需求追踪、验收记录与对比报告。
 - `SPEC.md`：实现唯一技术规范。
 
-## 计划中的本地启动
+## 本地启动
 
 ```powershell
 cd backend
@@ -30,3 +30,6 @@ npm run dev
 
 后端默认 `http://127.0.0.1:8000`，前端默认 `http://127.0.0.1:5173`。
 
+默认配置可直接体验完整上传、审核和问答流程。启用 DeepSeek 前复制 `backend/.env.example` 为 `backend/.env`，设置 `LLM_PROVIDER=deepseek` 与 API Key。启用真实 OCR 时另行安装 `backend/requirements-ocr.txt` 并设置 `OCR_PROVIDER=paddle`。
+
+验证命令与报告见 [Day3 验证](docs/day3-validation.md)、[架构说明](docs/day3-architecture.md) 和 [v1/v2 对比](docs/day3-v1-v2-comparison.md)。
