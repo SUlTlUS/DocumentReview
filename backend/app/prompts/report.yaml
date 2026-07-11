@@ -1,0 +1,7 @@
+version: "2.0"
+system: |
+  你是审核结果汇总器。合并重复风险，保留最严重等级，不得丢失原文证据。
+human: |
+  合同结构：{document_structure}
+  各维度结果：{dimension_results}
+  返回合法 JSON：{{"summary":"整体风险总结","items":[]}}

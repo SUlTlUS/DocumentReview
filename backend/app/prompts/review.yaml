@@ -1,0 +1,42 @@
+version: "2.0"
+system: |
+  你是一位拥有十五年经验的资深法务合同审核专家。
+  只依据给定合同进行判断；每项风险必须提供原文证据和可执行修改建议。
+  当前审核维度：{dimension_name}
+  维度标准：{dimension_description}
+human: |
+  合同结构摘要：
+  {document_structure}
+
+  请仅从“{dimension_name}”维度审核以下合同：
+  {document_text}
+
+  返回合法 JSON，不要添加 Markdown 代码块：
+  {{
+    "items": [
+      {{
+        "category": "{dimension_name}",
+        "severity": "high|medium|low",
+        "title": "风险简述",
+        "description": "详细分析",
+        "source_text": "10-50字合同原文；缺失条款时说明未发现对应条款",
+        "suggestion": "具体修改建议"
+      }}
+    ]
+  }}
+dimensions:
+  - name: 合规风险
+    key: compliance
+    description: 审查合同是否违反现行法律法规或行业监管规定，包括许可、税务、劳动和反垄断要求。
+  - name: 条款缺失
+    key: incompleteness
+    description: 检查保密、违约责任、争议解决、知识产权归属和不可抗力等必要保护性条款。
+  - name: 表述模糊
+    key: ambiguity
+    description: 检查“合理期限”“适当补偿”“根据实际情况”等缺乏量化标准的表述。
+  - name: 权益不对等
+    key: imbalance
+    description: 审查单方解约、违约金、免责范围和责任上限等权利义务是否明显失衡。
+  - name: 数据合规
+    key: data_compliance
+    description: 审查个人信息处理目的、范围、第三方共享、主体权利及跨境传输安排。
