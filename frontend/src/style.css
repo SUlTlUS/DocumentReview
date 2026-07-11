@@ -67,6 +67,8 @@ a { color: inherit; }
 .nav-index { color: var(--accent); font-family: "Cascadia Code", Consolas, monospace; font-size: 11px; }
 .sidebar-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 12px; color: var(--muted); font-size: 12px; }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px rgba(63, 185, 80, 0.12); }
+.status-dot--warning { background: var(--warning); box-shadow: 0 0 0 4px rgba(210, 153, 34, 0.12); }
+.status-dot--loading { background: var(--muted); box-shadow: 0 0 0 4px rgba(139, 148, 158, 0.12); }
 .main-content { min-height: 100vh; margin-left: var(--sidebar); padding: 40px; }
 .page-container { width: min(1120px, 100%); margin: 0 auto; }
 .page-placeholder { margin-top: 32px; border: 1px dashed var(--border); border-radius: 16px; padding: 48px 24px; color: var(--muted); text-align: center; }

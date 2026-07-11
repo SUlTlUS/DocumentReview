@@ -2,6 +2,8 @@ export type DocumentStatus = 'uploaded' | 'parsing' | 'ready' | 'parse_failed'
 export type ReviewStatus = 'pending' | 'reviewing' | 'completed' | 'review_failed'
 export type Severity = 'high' | 'medium' | 'low'
 
+export interface HealthStatus { status: string; llm_provider: string; deepseek_api_configured: boolean; version: string }
+
 export interface DocumentRecord {
   id: number; filename: string; file_type: string; file_size: number; status: DocumentStatus;
   review_status: ReviewStatus; upload_time: string; content_summary: string; chunk_count: number;

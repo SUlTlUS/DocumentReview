@@ -20,6 +20,7 @@ def api_client(tmp_path) -> Generator[TestClient, None, None]:
         database_url=f"sqlite:///{tmp_path / 'api.db'}",
         upload_dir=tmp_path / "uploads",
         llm_provider="mock",
+        deepseek_api_key="",
     )
     settings.ensure_directories()
 
@@ -37,4 +38,3 @@ def api_client(tmp_path) -> Generator[TestClient, None, None]:
         yield client
     app.dependency_overrides.clear()
     rag_registry.clear()
-

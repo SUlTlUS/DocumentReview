@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
 import logging
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.config import get_settings
+from app.config import Settings, get_settings
 from app.database import engine
 from app.errors import AppError
 from app.models import Base
@@ -53,6 +53,10 @@ async def handle_app_error(_request: Request, exc: AppError) -> JSONResponse:
 
 
 @app.get("/api/health", response_model=HealthResponse, tags=["system"])
-def health() -> HealthResponse:
-    settings = get_settings()
-    return HealthResponse(status="ok", llm_provider=settings.llm_provider, version=app.version)
+def health(settings: Settings = Depends(get_settings)) -> HealthResponse:
+    return HealthResponse(
+        status="ok",
+        llm_provider=settings.llm_provider,
+        deepseek_api_configured=bool(settings.deepseek_api_key.strip()),
+        version=app.version,
+    )

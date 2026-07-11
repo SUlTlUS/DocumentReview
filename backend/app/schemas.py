@@ -88,5 +88,5 @@ class ChatHistoryResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     llm_provider: str
+    deepseek_api_configured: bool
     version: str
-
