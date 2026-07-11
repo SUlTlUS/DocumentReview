@@ -11,7 +11,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 def test_health_reports_mock_provider(api_client):
     response = api_client.get("/api/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "llm_provider": "mock", "version": "1.0.0"}
+    assert response.json() == {"status": "ok", "llm_provider": "mock", "version": "2.0.0"}
 
 
 def test_upload_list_detail_and_delete_txt(api_client):

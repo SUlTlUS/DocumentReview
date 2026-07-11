@@ -22,7 +22,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(
     title="RAG 文档审核系统",
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan,
 )
 app.add_middleware(
