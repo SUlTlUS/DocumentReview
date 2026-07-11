@@ -9,6 +9,8 @@ from app.database import engine
 from app.errors import AppError
 from app.models import Base
 from app.routers.documents import router as documents_router
+from app.routers.review import router as review_router
+from app.routers.chat import router as chat_router
 from app.schemas import ErrorResponse, HealthResponse
 
 
@@ -31,6 +33,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(documents_router)
+app.include_router(review_router)
+app.include_router(chat_router)
 
 
 @app.exception_handler(AppError)
@@ -43,4 +47,3 @@ async def handle_app_error(_request: Request, exc: AppError) -> JSONResponse:
 def health() -> HealthResponse:
     settings = get_settings()
     return HealthResponse(status="ok", llm_provider=settings.llm_provider, version=app.version)
-
