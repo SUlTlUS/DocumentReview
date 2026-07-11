@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { getDocument, getErrorMessage, getReviewResult, isNotFound, triggerReview } from '../api'
+import { getDocument, getErrorMessage, getHealth, getReviewResult, isNotFound, triggerReview } from '../api'
 import KineticTitle from '../components/KineticTitle.vue'
 import type { DocumentRecord, ReviewResult } from '../types/api'
 
@@ -12,13 +12,20 @@ const review = ref<ReviewResult | null>(null)
 const loading = ref(true)
 const reviewing = ref(false)
 const error = ref('')
+const llmProvider = ref('')
 const severityRank = { high: 0, medium: 1, low: 2 }
 const sortedItems = computed(() => [...(review.value?.items ?? [])].sort((a, b) => severityRank[a.severity] - severityRank[b.severity]))
 const severityLabel = { high: '高风险', medium: '中风险', low: '低风险' }
+const reviewProgressCopy = computed(() => {
+  const prefix = llmProvider.value === 'deepseek' ? 'DeepSeek ' : llmProvider.value === 'mock' ? 'Mock 管线' : '审核管线'
+  return `${prefix}正在检查合规风险、条款缺失、模糊表述、权益不对等和数据合规。`
+})
 
 async function load() {
   loading.value = true; error.value = ''
   try {
+    const health = await getHealth().catch(() => null)
+    llmProvider.value = health?.llm_provider.toLowerCase() ?? ''
     document.value = await getDocument(documentId)
     if (document.value.review_status !== 'pending') {
       try { review.value = await getReviewResult(documentId) } catch (reason) { if (!isNotFound(reason)) throw reason }
@@ -37,7 +44,7 @@ onMounted(load)
     <div class="review-heading"><KineticTitle eyebrow="Review / Risk Map" title="审核结果" :description="document ? `${document.filename} · ${document.chunk_count} 个文本块` : '按风险等级浏览问题、原文和修改建议。'" /><div class="heading-actions"><RouterLink class="button" :to="`/documents/${documentId}/chat`">转到问答</RouterLink><button class="button button-primary" type="button" :disabled="reviewing || document?.status !== 'ready'" @click="runReview">{{ reviewing ? '审核中' : review ? '重新审核' : '发起审核' }}</button></div></div>
     <div v-if="error" class="error-banner" role="alert">{{ error }}</div>
     <div v-if="loading" class="review-skeleton panel skeleton" aria-label="正在加载审核结果"></div>
-    <div v-else-if="reviewing" class="review-progress panel" aria-live="polite"><div class="progress-copy"><span>ANALYZE</span><span>CLASSIFY</span><span>REPORT</span></div><h2>正在审核合同</h2><p>Mock 管线正在检查合规、缺失条款、模糊表述和权益不对等。</p></div>
+    <div v-else-if="reviewing" class="review-progress panel" aria-live="polite"><div class="progress-copy"><span>ANALYZE</span><span>CLASSIFY</span><span>REPORT</span></div><h2>正在审核合同</h2><p>{{ reviewProgressCopy }}</p></div>
     <div v-else-if="!review" class="empty-review panel"><span>NO REVIEW YET</span><h2>这份文档还没有审核记录</h2><p>发起审核后，风险卡片、原文和修改建议会出现在这里。</p><button class="button button-primary" type="button" @click="runReview">开始第一次审核</button></div>
     <template v-else>
       <div class="metric-grid" aria-label="审核统计"><article class="metric panel"><span>问题总数</span><strong>{{ review.total_items }}</strong></article><article class="metric panel danger"><span>高风险</span><strong>{{ review.risk_count }}</strong></article><article class="metric panel"><span>耗时</span><strong>{{ review.duration_ms }}<small>ms</small></strong></article><article class="metric panel"><span>管线</span><strong class="pipeline">{{ review.pipeline_version }}</strong></article></div>
