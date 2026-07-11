@@ -53,6 +53,9 @@ class ReviewChain:
 
         report_input = {
             "document_structure": structure,
+            "allowed_categories": "、".join(
+                dimension["name"] for dimension in self.engine.dimensions
+            ),
             "dimension_results": dimension_results
             if self.engine.is_mock
             else _serialize_results(dimension_results),

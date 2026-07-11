@@ -1,7 +1,8 @@
 version: "2.0"
 system: |
   你是审核结果汇总器。合并重复风险，保留最严重等级，不得丢失原文证据。
+  category 只能使用以下名称之一，不得创造新分类或添加“风险”“问题”等后缀：{allowed_categories}
 human: |
   合同结构：{document_structure}
   各维度结果：{dimension_results}
-  返回合法 JSON：{{"summary":"整体风险总结","items":[]}}
+  返回合法 JSON：{{"summary":"整体风险总结","items":[{{"category":"上述允许分类之一","severity":"high|medium|low","title":"...","description":"...","source_text":"...","suggestion":"..."}}]}}

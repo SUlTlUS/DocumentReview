@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import logging
 from typing import Any, Literal
 
@@ -40,22 +41,47 @@ def validate_dimension_result(payload: dict[str, Any], category: str) -> Dimensi
         result = DimensionResultPayload.model_validate(payload)
     except ValidationError as exc:
         raise LLMError("维度审核结果字段不完整", str(exc)) from exc
-    if any(item.category != category for item in result.items):
-        raise LLMError("维度审核结果分类不匹配", category)
-    return result
+    return DimensionResultPayload(
+        items=[item.model_copy(update={"category": category}) for item in result.items]
+    )
+
+
+def _canonical_category(item: ReviewItemPayload, categories: list[str]) -> str:
+    if item.category in categories:
+        return item.category
+    evidence = f"{item.category} {item.title} {item.description}".lower()
+    rules = (
+        ("数据合规", ("数据", "个人信息", "隐私", "跨境")),
+        ("条款缺失", ("缺失", "缺少", "遗漏", "不完整", "未约定", "未明确约定")),
+        ("表述模糊", ("模糊", "歧义", "不明确", "不清晰", "未量化", "表述")),
+        ("权益不对等", ("不对等", "失衡", "单方", "不公平", "过度免责")),
+        ("合规风险", ("合规", "违法", "法律", "法规", "资质", "许可", "税务")),
+    )
+    for target, keywords in rules:
+        if target in categories and any(keyword in evidence for keyword in keywords):
+            return target
+    return "合规风险" if "合规风险" in categories else categories[0]
 
 
 def validate_review_result(
     payload: dict[str, Any],
-    categories: set[str] | None = None,
+    categories: set[str] | list[str] | tuple[str, ...] | None = None,
 ) -> ReviewResultPayload:
     try:
         result = ReviewResultPayload.model_validate(payload)
     except ValidationError as exc:
         raise LLMError("审核结果字段不完整", str(exc)) from exc
-    if categories and any(item.category not in categories for item in result.items):
-        raise LLMError("审核结果包含未知分类")
-    return result
+    if not categories:
+        return result
+    allowed = list(categories)
+    normalized: list[ReviewItemPayload] = []
+    for item in result.items:
+        category = _canonical_category(item, allowed)
+        if category != item.category:
+            digest = hashlib.sha256(item.category.encode("utf-8")).hexdigest()[:10]
+            logger.warning("review_category_normalized source_sha256=%s target=%s", digest, category)
+        normalized.append(item.model_copy(update={"category": category}))
+    return ReviewResultPayload(summary=result.summary, items=normalized)
 
 
 class ReviewEngine:
@@ -115,7 +141,7 @@ class ReviewEngine:
     def report_runnable(self) -> Runnable:
         if self.is_mock:
             return RunnableLambda(self._mock_report).with_config(run_name="mock_report_aggregation")
-        categories = {item["name"] for item in self.dimensions}
+        categories = [item["name"] for item in self.dimensions]
         return (
             self.report_bundle.prompt
             | self._model
