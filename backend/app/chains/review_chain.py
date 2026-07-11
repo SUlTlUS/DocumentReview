@@ -10,7 +10,7 @@ from app.engines.reviewer import ReviewEngine, ReviewResultPayload
 from app.services.reporter import ReporterService
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 
 class ReviewChain:

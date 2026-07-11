@@ -9,7 +9,7 @@ from typing import Any
 from app.errors import LLMError
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 
 def extract_json(text: str) -> dict[str, Any]:

@@ -15,7 +15,7 @@ def test_three_stage_chain_runs_five_independent_dimensions(caplog):
     engine = ReviewEngine(Settings(llm_provider="mock"))
     chain = ReviewChain(engine, max_concurrency=2)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INFO, logger="uvicorn.error"):
         result = chain.invoke(CONTRACT)
 
     assert len(engine.dimensions) == 5

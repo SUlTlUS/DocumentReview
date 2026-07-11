@@ -10,7 +10,7 @@ from app.engines.ocr import OCRProvider
 
 
 SUPPORTED_TYPES = {"pdf", "docx", "txt"}
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 
 @dataclass(frozen=True)
