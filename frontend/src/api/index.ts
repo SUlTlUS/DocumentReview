@@ -7,10 +7,16 @@ export async function uploadDocument(file: File): Promise<DocumentUploadResponse
 export async function getDocuments(): Promise<DocumentListResponse> { return (await api.get('/api/documents')).data }
 export async function getDocument(id: number): Promise<DocumentRecord> { return (await api.get(`/api/documents/${id}`)).data }
 export async function deleteDocument(id: number): Promise<void> { await api.delete(`/api/documents/${id}`) }
-export async function triggerReview(id: number): Promise<ReviewResult> { return (await api.post(`/api/documents/${id}/review`)).data }
+export async function triggerReview(id: number): Promise<ReviewResult> { return (await api.post(`/api/documents/${id}/review`, undefined, { timeout: 240_000 })).data }
 export async function getReviewResult(id: number): Promise<ReviewResult> { return (await api.get(`/api/documents/${id}/review`)).data }
 export async function sendMessage(id: number, question: string, sessionId?: number | null): Promise<ChatResponse> { return (await api.post(`/api/documents/${id}/chat`, { question, session_id: sessionId ?? null })).data }
 export async function getChatHistory(id: number, sessionId?: number | null): Promise<ChatHistory> { return (await api.get(`/api/documents/${id}/chat/history`, { params: sessionId ? { session_id: sessionId } : {} })).data }
 export async function getHealth(): Promise<HealthStatus> { return (await api.get('/api/health')).data }
-export function getErrorMessage(error: unknown): string { if (axios.isAxiosError(error)) return String(error.response?.data?.detail ?? error.response?.data?.message ?? error.message); return error instanceof Error ? error.message : '发生未知错误' }
+export function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    if (error.code === 'ECONNABORTED') return '请求处理时间过长，请稍后刷新页面查看结果；若仍未完成，请检查后端日志。'
+    return String(error.response?.data?.detail ?? error.response?.data?.message ?? error.message)
+  }
+  return error instanceof Error ? error.message : '发生未知错误'
+}
 export function isNotFound(error: unknown): boolean { return axios.isAxiosError(error) && error.response?.status === 404 }
